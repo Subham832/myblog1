@@ -8,6 +8,7 @@ import com.myblog1.service.PostService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -24,11 +25,19 @@ public class PostServiceImpl implements PostService {
 
     @Override
     public PostDto createPost(PostDto postDto) {
-        Post post = mapToEntity((postDto));
-        Post savedPost = postRepository.save(post);
+       Post post = mapToEntity((postDto));
+       Post savedPost = postRepository.save(post);
 
         PostDto dto = mapToDto(post);
         return dto;
+    }
+    Post mapToEntity(PostDto postDto){
+        Post post = new Post();
+        post.setId(postDto.getId());
+        post.setTitle(postDto.getTitle());
+        post.setDescription(postDto.getDescription());
+        post.setContent(postDto.getContent());
+        return post;
     }
 
     @Override
@@ -45,14 +54,16 @@ public class PostServiceImpl implements PostService {
     }
 
     @Override
-    public List<PostDto> getAllPosts(int pageNo, int pageSize) {
-       Pageable pageable =  PageRequest.of(pageNo,pageSize);
+    public List<PostDto> getAllPosts(int pageNo, int pageSize, String sortBy, String sortDir) {
+        Sort sort = (sortDir.equalsIgnoreCase(Sort.Direction.ASC.name())) ? Sort.by(sortBy).ascending() : Sort.by(sortBy).descending();
+        Pageable pageable =  PageRequest.of(pageNo,pageSize, sort); //for fetching the record we use PageRequest.
         Page<Post> pagePost = postRepository.findAll(pageable);
         List<Post> posts = pagePost.getContent();
         List<PostDto> dtos = posts.stream().map(post -> mapToDto(post)).collect(Collectors.toList());
         return dtos;
     }
-   PostDto mapToDto(Post post){
+
+    PostDto mapToDto(Post post){
         PostDto postDto = new PostDto();
         postDto.setId(post.getId());
         postDto.setTitle(post.getTitle());
@@ -60,12 +71,19 @@ public class PostServiceImpl implements PostService {
         postDto.setContent(post.getContent());
         return postDto;
     }
-   Post mapToEntity(PostDto postDto){
-        Post post = new Post();
-        post.setId(postDto.getId());
-        post.setTitle(postDto.getTitle());
-        post.setDescription(postDto.getDescription());
-        post.setContent(postDto.getContent());
-        return post;
+
+
+
+    @Override
+    public PostDto findPost(long id) {
+        Post post = postRepository.findById(id).get();
+        PostDto dto = new PostDto();
+        dto.setId(post.getId());
+        dto.setTitle(post.getTitle());
+        dto.setContent(post.getContent());
+        dto.setDescription(post.getDescription());
+        return dto;
     }
+
+
 }
