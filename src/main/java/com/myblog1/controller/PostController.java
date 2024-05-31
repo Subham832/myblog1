@@ -4,6 +4,7 @@ import com.myblog1.payload.PostDto;
 import com.myblog1.service.PostService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,6 +19,7 @@ public class PostController {
         this.postService = postService;
     }
 
+   // @PreAuthorize("hasRole('USER')")
     @PostMapping
     public ResponseEntity<PostDto> createPost(@RequestBody PostDto postDto){
         PostDto dto = postService.createPost(postDto);
@@ -48,6 +50,18 @@ public class PostController {
         PostDto dto = postService.findPost(id);
         return new ResponseEntity<>(dto, HttpStatus.OK);
 
+    }
+
+    //http://localhost:8080/api/posts/1
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deletePostById(@PathVariable Long id){
+        postService.deletePostById(id);
+        return new ResponseEntity<>("Post is Deleted!!", HttpStatus.OK);
+    }
+    @PutMapping("/{id}")
+    public ResponseEntity<PostDto> updatePost(@PathVariable Long id, @RequestBody PostDto postDto){
+        PostDto dto = postService.updatePost(id, postDto);
+        return new ResponseEntity<>(dto, HttpStatus.OK);
     }
 
 
