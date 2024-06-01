@@ -6,6 +6,8 @@ import com.myblog1.payload.LoginDto;
 import com.myblog1.payload.SignUpDto;
 import com.myblog1.repository.RoleRepository;
 import com.myblog1.repository.UserRepository;
+import com.myblog1.security.JWTAuthResponse;
+import com.myblog1.security.JwtTokenProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -40,6 +42,9 @@ public class AuthController {
     @Autowired
     private RoleRepository roleRepository;
 
+    @Autowired
+    private JwtTokenProvider tokenProvider;
+
 //http://localhost:8080/api/auth/signup
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignUpDto signUpDto) {
@@ -73,14 +78,16 @@ public class AuthController {
     }
     //http://localhost:8080/api/auth/signin
     @PostMapping("/signin")
-    public ResponseEntity<String> authenticateUser(@RequestBody LoginDto loginDto){
-        UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken = new UsernamePasswordAuthenticationToken(
-                loginDto.getUsernameOrEmail(),
-                loginDto.getPassword());
-        Authentication authentication = authenticationManager.authenticate(usernamePasswordAuthenticationToken);//Comparing DataBase To User Data.
+    public ResponseEntity<JWTAuthResponse> authenticateUser(@RequestBody LoginDto loginDto){
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(
+                loginDto.getUsernameOrEmail(), loginDto.getPassword()));
 
-        SecurityContextHolder.getContext().setAuthentication(authentication);//Session.
-        return new ResponseEntity<>("User signed-in successfully!.", HttpStatus.OK);//Session Will Set Then It Will print this message.
+        SecurityContextHolder.getContext().setAuthentication(authentication);
 
+        // get token form tokenProvider
+        String token = tokenProvider.generateToken(authentication);
+
+        return ResponseEntity.ok(new JWTAuthResponse(token));
     }
+
 }
